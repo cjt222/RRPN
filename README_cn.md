@@ -29,7 +29,7 @@ RRPN](https://arxiv.org/abs/1703.01086) 整体网络可以分为4个主要内容
 
 ## 数据准备
 
-在[ICDAR2015数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads上进行训练，需进行注册下载。
+在[ICDAR2015数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads)上进行训练，需进行注册下载。
 
 数据目录结构如下：
 
