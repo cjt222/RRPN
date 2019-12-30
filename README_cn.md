@@ -18,43 +18,38 @@
 ## 简介
 RRPN为两阶段目标检测器，可用于文字检测和旋转物体检测。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
 
-[Faster RCNN](https://arxiv.org/abs/1506.01497) 整体网络可以分为4个主要内容：
+RRPN](https://arxiv.org/abs/1703.01086) 整体网络可以分为4个主要内容：
 
 1. 基础卷积层。作为一种卷积神经网络目标检测方法，Faster RCNN首先使用一组基础的卷积网络提取图像的特征图。特征图被后续RPN层和全连接层共享。本示例采用[ResNet-50](https://arxiv.org/abs/1512.03385)作为基础卷积层。
-2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸和比例得到一组锚点(anchors), 通过softmax判断锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
-3. RoI Align。该层收集输入的特征图和候选区域，将候选区域映射到特征图中并池化为统一大小的区域特征图，送入全连接层判定目标类别, 该层可选用RoIPool和RoIAlign两种方式，在config.py中设置roi\_func。
+2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸和比例得到一组带方向锚点(anchors), 通过softmax判断旋转的锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
+3. Rotated RoI Align。该层收集输入的特征图和带方向的候选区域，将带方向的候选区域映射到特征图中进行并池化为统一大小的区域特征图，送入全连接层判定目标类别。
 4. 检测层。利用区域特征图计算候选区域的类别，同时再次通过区域回归获得检测框最终的精确位置。
 
-[Mask RCNN](https://arxiv.org/abs/1703.06870) 扩展自Faster RCNN，是经典的实例分割模型。
-
-Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；第二阶段根据候选框得到分类结果，边界框，同时在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
 
 ## 数据准备
 
-在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
-
-```bash
-python dataset/coco/download.py
-```
+在[ICDAR2015MS-COCO数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads上进行训练，需进行注册下载。
 
 数据目录结构如下：
 
 ```
-data/coco/
-├── annotations
-│   ├── instances_train2014.json
-│   ├── instances_train2017.json
-│   ├── instances_val2014.json
-│   ├── instances_val2017.json
+data/icdar2015/
+├── ch4_training_images
+│   ├── img_143.jpg
+│   ├── img_144.jpg
 |   ...
-├── train2017
-│   ├── 000000000009.jpg
-│   ├── 000000580008.jpg
+├── ch4_training_localization_transcription_gt
+│   ├── gt_img_143.txt
+│   ├── gt_img_144.txt
 |   ...
-├── val2017
-│   ├── 000000000139.jpg
-│   ├── 000000000285.jpg
+├── test_image
+│   ├── img_111.jpg
+│   ├── img_112.jpg
+|   ...
+├── test_gt
+│   ├── img_111.jpg
+│   ├── img_112.jpg
 |   ...
 
 ```
@@ -65,7 +60,6 @@ data/coco/
 
     sh ./pretrained/download.sh
 
-**注意:** Windows用户可通过`./pretrained/download.sh`中的链接直接下载和解压。
 
 通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
@@ -83,7 +77,7 @@ data/coco/
 
 
     - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
-   (http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+   
     - 可选参数见：
 
         python train.py --help
@@ -111,7 +105,7 @@ data/coco/
 
 `eval.py`是评估模块的主要执行程序，调用示例如下：
 
-- Faster RCNN
+- RRPN
 
     ```
     python eval.py \
