@@ -22,22 +22,8 @@ from PIL import ImageDraw
 from PIL import ImageFont
 from config import cfg
 import six
-from colormap import colormap
 import cv2
 
-#def clip_box(bbox, im_info):
-#
-#    h = im_info[0]
-#    w = im_info[1]
-#    print("########", bbox)
-#    pts = bbox.reshape(4, 2)
-#    pts[np.where(pts < 0)] = 1
-#    pts[np.where(pts[:, 0] > w), 0] = w - 1
-#    pts[np.where(pts[:, 1] > h), 1] = h - 1
-#    pts = pts.reshape(-1)
-#    pts /= im_info[2]
-
-#    return pts
 
 def get_dict(out, data, key):
     res = {}
@@ -54,6 +40,41 @@ import Polygon as plg
 import logging
 logger = logging.getLogger(__name__)
 
+
+def get_labels_maps():
+    labels_map = {}
+    with open(os.path.join(cfg.data_dir, 'label_list')) as f:
+        lines = f.readlines()
+        for idx, line in enumerate(lines):
+            labels_map[idx+1] = line.strip()
+        return labels_map
+
+def draw_bounding_box_on_image(image_path,
+                               image_name,
+                               nms_out,
+                               im_scale,
+                               draw_threshold=0.8):
+    #if image is None:
+    image = Image.open(os.path.join(image_path, image_name))
+    draw = ImageDraw.Draw(image)
+    im_width, im_height = image.size
+
+    labels_map = get_labels_maps()
+    for dt in np.array(nms_out):
+        num_id, score = dt.tolist()[:2]
+        x1, y1, x2, y2, x3, y3, x4, y4 = dt.tolist()[2:] / im_scale
+        #num_id, score, x1, y1, x2, y2, x3, y3, x4, y4 = dt.tolist()
+        if score < draw_threshold:
+            continue
+        draw.line(
+            [(x1, y1), (x2, y2), (x3, y3), (x4, y4),
+             (x1, y1)],
+            width=2,
+            fill='red')
+        if image.mode == 'RGB':
+            draw.text((x1, y1), labels_map[num_id], (255, 255, 0))
+    print("image with bbox drawed saved as {}".format(image_name))
+    image.save(image_name)
 
 
 def polygon_from_points(points):
@@ -113,15 +134,15 @@ def get_intersection(det, gt):
 def parse_gt(result, im_id):
     #   objects = []
     for res in result:
-        if res['im_id'][0][0][0] == im_id:
-            gt_boxes = list(res['gt_box'][0])
-            gt_class = res['gt_label'][0]
-            is_difficult = res['is_difficult'][0].reshape(-1)
+        if res['im_id'] == im_id:
+            gt_boxes = list(res['gt_box'])
+            gt_class = res['gt_class']
+            is_difficult = res['is_difficult'].reshape(-1)
             objects = []
             for i in range(len(gt_boxes)):
                 object_struct = {}
                 object_struct['bbox'] = gt_boxes[i]
-                object_struct['class'] = gt_class[i][0]
+                object_struct['class'] = gt_class[i]
                 if is_difficult[i] == 1:
                     object_struct['difficult'] = 1
                 else:
@@ -146,7 +167,7 @@ def caluc_ap(rec, prec):
 def icdar_map(result, class_name, ovthresh):
     im_ids = []
     for res in result:
-        im_ids.append(res['im_id'][0][0][0])
+        im_ids.append(res['im_id'])
     recs = {}
 
     for i, im_id in enumerate(im_ids):
@@ -166,15 +187,19 @@ def icdar_map(result, class_name, ovthresh):
     for res in result:
         im_info = res['im_info']
         pred_boxes = res['bbox']
+        #print("class_name", class_name)
         for box in pred_boxes:
             if box[0] == class_name:
-                image_ids.append(res['im_id'][0][0][0])
+                image_ids.append(res['im_id'])
                 confidence.append(box[1])
+                #print("###########", box[2:])
                 clipd_box = clip_box(box[2:].reshape(-1, 8), im_info)
+                #print(clipd_box)
                 BB.append(clipd_box[0])
     confidence = np.array(confidence)
     sorted_ind = np.argsort(-confidence)
     sorted_scores = np.sort(-confidence)
+    #print(BB)
     BB = np.array(BB)
     BB = BB[sorted_ind, :]
     image_ids = [image_ids[x] for x in sorted_ind]
@@ -256,7 +281,7 @@ def icdar_map_eval(result, num_class):
         rec, prec, ap = icdar_map(result, i + 1, ovthresh=0.5)
         map = map + ap
     map = map / (num_class - 1)
-    logger.info('mAP {}'.format(map))
+    print('mAP {}'.format(map))
 
 
 def icdar_box_eval(result, thresh):
@@ -355,8 +380,8 @@ def icdar_box_eval(result, thresh):
     print('Precision {}'.format(method_precision))
     print('F1 {}'.format(method_hmean))
 
-def icdar_eval(result, num_class):
-    if num_class == 2:
+def icdar_eval(result):
+    if cfg.dataset == 'icdar2015':
         icdar_box_eval(result, 0.8)
     else:
-        icdar_map_eval(result, num_class)
+        icdar_map_eval(result, cfg.class_num)

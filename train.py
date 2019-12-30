@@ -42,7 +42,8 @@ import paddle
 import paddle.fluid as fluid
 import reader
 import models.model_builder as model_builder
-import models.resnet as resnet
+#import models.resnet as resnet
+import models.resnet_pp as resnet
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
 import dist_utils
@@ -79,8 +80,8 @@ def train():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = model_builder.RCNN(
-                add_conv_body_func=resnet.add_ResNet50_conv4_body,
-                add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
+                add_conv_body_func=resnet.ResNet(),
+                add_roi_box_head_func=resnet.ResNetC5(),
                 use_pyreader=cfg.use_pyreader,
                 use_random=use_random)
             model.build_model(image_shape)

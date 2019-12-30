@@ -98,7 +98,6 @@ class RCNN(object):
             if cfg.MASK_ON:
                 self.gt_masks = ins[6]
         else:
-            print("######################")
             self.image = fluid.layers.data(
                 name='image', shape=image_shape, dtype='float32')
             self.gt_box = fluid.layers.data(
@@ -156,7 +155,6 @@ class RCNN(object):
             box_reshape = fluid.layers.reshape(x=box_positive, shape=[1, -1, 8])
             score_reshape = fluid.layers.reshape(
                 x=score_slice, shape=[1, 1, -1])
-            #pred_result = fluid.layers.multiclass_nms(bboxes=box_reshape, scores=score_reshape)
             pred_result = fluid.layers.multiclass_nms(
                 bboxes=box_reshape,
                 scores=score_reshape,
@@ -282,16 +280,10 @@ class RCNN(object):
             im_info=self.im_info,
             anchors=self.anchor,
             variances=self.var,
-            pre_nms_top_n=6000,
-            post_nms_top_n=1000,
+            pre_nms_top_n=pre_nms_top_n,
+            post_nms_top_n=post_nms_top_n,
             nms_thresh=0.7,
             min_size=0)
-        
-        #print("**************************")
-        #fluid.layers.Print(self.rpn_rois)
-        #fluid.layers.Print(self.gt_label)
-        #fluid.layers.Print(self.gt_box)
-        #fluid.layers.Print(self.rpn_rois, summarize=-1)
         if self.mode == 'train':
             outs = rotated_generate_proposal_labels(
                 rpn_rois=self.rpn_rois,
@@ -305,7 +297,7 @@ class RCNN(object):
                 bg_thresh_hi=0.5,
                 bg_thresh_lo=0.0,
                 bbox_reg_weights=cfg.bbox_reg_weights,
-                class_nums=2,
+                class_nums=cfg.class_num,
                 use_random=True)
 
             self.rois = outs[0]

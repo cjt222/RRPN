@@ -130,17 +130,17 @@ def parse_args():
     add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
     add_arg('model_save_dir',   str,    'output',     "The path to save model.")
     add_arg('pretrained_model', str,    'ResNet50_cos_pretrained', "The init model path.")
-    add_arg('dataset',          str,   'coco2017',  "coco2014, coco2017.")
-    add_arg('class_num',        int,   2,          "Class number.")
-    add_arg('data_dir',         str,   './ICDAR2015/',        "The data root path.")
+    add_arg('dataset',          str,   'icdar2017',  "coco2014, coco2017.")
+    add_arg('class_num',        int,   7,          "Class number.")
+    add_arg('data_dir',         str,   './coco_rabish/train2017/',        "The data root path.")
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
         "If False, only resize image and not pad, image shape is different between"
         " GPUs in one mini-batch. If True, image shape is the same in one mini-batch.")
     #SOLVER
-    add_arg('learning_rate',    float,  0.02,     "Learning rate.")
-    add_arg('max_iter',         int,    20000,   "Iter number.")
+    add_arg('learning_rate',    float,  0.005,     "Learning rate.")
+    add_arg('max_iter',         int,    30000,   "Iter number.")
     add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
     # RCNN
     # RPN

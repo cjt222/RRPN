@@ -52,7 +52,7 @@ _C.TRAIN.bg_thresh_lo = 0.0
 _C.TRAIN.padding_minibatch = False
 
 # Snapshot period
-_C.TRAIN.snapshot_iter = 5000
+_C.TRAIN.snapshot_iter = 1000
 
 # number of RPN proposals to keep before NMS
 _C.TRAIN.rpn_pre_nms_top_n = 12000
@@ -187,7 +187,7 @@ _C.warm_up_iter = 500
 _C.warm_up_factor = 1. / 3.
 
 # lr steps_with_decay, 1x: [120000, 160000], 2x: [240000, 320000]
-_C.lr_steps = [50000, 100000]
+_C.lr_steps = [6250, 17500]
 #_C.lr_steps = [240000, 320000]
 _C.lr_gamma = 0.1
 

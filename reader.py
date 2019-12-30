@@ -24,7 +24,7 @@ import math
 import paddle
 from collections import deque
 
-from roidbs2 import ICDAR2015Dataset
+from roidbs2 import ICDAR2015Dataset, ICDAR2017Dataset
 import data_utils2
 from config import cfg
 from PIL import Image
@@ -58,9 +58,13 @@ def RRPNData(mode,
          #roidbs=None):
     total_batch_size = total_batch_size if total_batch_size else batch_size
     assert total_batch_size % batch_size == 0
-    icdar2015_dataset = ICDAR2015Dataset(mode)
-    roidbs = icdar2015_dataset.get_roidb()
-
+    if cfg.dataset == "icdar2015":
+        icdar2015_dataset = ICDAR2015Dataset(mode)
+        roidbs = icdar2015_dataset.get_roidb()
+    else:
+        icdar2017_dataset = ICDAR2017Dataset(mode)
+        roidbs = icdar2017_dataset.get_roidb()   
+ 
     print("{} on {} with {} roidbs".format(mode, cfg.dataset, len(roidbs)))
 
 

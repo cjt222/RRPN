@@ -65,8 +65,6 @@ def eval():
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     fetch_list = [pred_boxes]
-    imgs = os.listdir(cfg.image_path)
-    imgs.sort()
     res_list = []
     keys=['bbox', 'gt_box', 'gt_class', 'is_crowed', 'im_info', 'im_id', 'is_difficult']
     for i, data in enumerate(test_reader()):
@@ -82,7 +80,7 @@ def eval():
         if i % 50 == 0:
             print('test_iter {}'.format(i))
 
-    icdar_eval(res_list, 2)
+    icdar_eval(res_list)
 
 if __name__ == '__main__':
     args = parse_args()
