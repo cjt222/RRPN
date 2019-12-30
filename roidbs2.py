@@ -34,9 +34,6 @@ import random
 import time
 import matplotlib
 import cv2
-matplotlib.use('Agg')
-from pycocotools.coco import COCO
-import box_utils
 #import segm_utils
 from config import cfg
 from data_utils2 import DatasetPath

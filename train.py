@@ -46,7 +46,6 @@ import models.model_builder as model_builder
 import models.resnet_pp as resnet
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
-import dist_utils
 import checkpoint as checkpoint
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
