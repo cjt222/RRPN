@@ -135,13 +135,16 @@ class RRPN(object):
             box_reshape = fluid.layers.reshape(x=box_positive, shape=[1, -1, 8])
             score_reshape = fluid.layers.reshape(
                 x=score_slice, shape=[1, 1, -1])
+            print("cfg.TEST.score_thresh", cfg.TEST.score_thresh)
+            print("cfg.TEST.nms_thresh", cfg.TEST.nms_thresh)
+            print("cfg.TEST.detections_per_im", cfg.TEST.detections_per_im)
             pred_result = fluid.layers.multiclass_nms(
                 bboxes=box_reshape,
                 scores=score_reshape,
-                score_threshold=0.01,
+                score_threshold=cfg.TEST.score_thresh,
                 nms_top_k=-1,
-                nms_threshold=0.3,
-                keep_top_k=300,
+                nms_threshold=cfg.TEST.nms_thresh,
+                keep_top_k=cfg.TEST.detections_per_im,
                 normalized=False,
                 background_label=-1)
             result_shape = fluid.layers.shape(pred_result)

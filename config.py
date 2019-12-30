@@ -108,10 +108,10 @@ _C.TEST.max_size = 1333
 _C.TEST.rpn_eta = 1.0
 
 # min score threshold to infer
-_C.TEST.score_thresh = 0.05
+_C.TEST.score_thresh = 0.01
 
 # overlap threshold used for NMS
-_C.TEST.nms_thresh = 0.5
+_C.TEST.nms_thresh = 0.3
 
 # number of RPN proposals to keep before NMS
 _C.TEST.rpn_pre_nms_top_n = 6000
@@ -123,7 +123,7 @@ _C.TEST.rpn_post_nms_top_n = 1000
 _C.TEST.rpn_min_size = 0.0
 
 # max number of detections
-_C.TEST.detections_per_im = 100
+_C.TEST.detections_per_im = 300
 
 # NMS threshold used on RPN proposals
 _C.TEST.rpn_nms_thresh = 0.7
@@ -179,7 +179,7 @@ _C.mrcnn_thresh_binarize = 0.5
 _C.learning_rate = 0.01
 
 # maximum number of iterations, 1x: 180000, 2x:360000
-_C.max_iter = 180000
+_C.max_iter = 140000
 #_C.max_iter = 360000
 
 # warm up to learning rate 

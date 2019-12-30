@@ -154,8 +154,8 @@ def parse_args():
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
     add_arg('max_size',         int,   1333,    "The resized image height.")
     add_arg('pixel_means',     float,   [0.485, 0.456, 0.406], "pixel mean")
-    add_arg('nms_thresh',    float, 0.5,    "NMS threshold.")
-    add_arg('score_thresh',    float, 0.05,    "score threshold for NMS.")
+    add_arg('nms_thresh',    float, 0.3,    "NMS threshold.")
+    add_arg('score_thresh',    float, 0.01,    "score threshold for NMS.")
     add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
