@@ -143,7 +143,6 @@ def _resize(im, target_size=800, max_size=1333):
         im = Image.fromarray(im)
         im = im.resize((int(resize_w), int(resize_h)), 2)
         im = np.array(im)
-        np.save("resize____.npy", im)
         return im, im_scale_x
     
 def _rotation(image, gt_boxes, gt_label, prob, fixed_angle=-1, r_range=(360, 0), gt_margin=1.4):
@@ -211,7 +210,6 @@ def _rotation(image, gt_boxes, gt_label, prob, fixed_angle=-1, r_range=(360, 0),
     need_gt_boxes = rotated_gt_boxes[inbound]
     need_gt_label = gt_label.copy()
     need_gt_label = need_gt_label[inbound]
-    np.save("./img.npy", image)
     return image, need_gt_boxes, need_gt_label
     
     

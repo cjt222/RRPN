@@ -130,9 +130,9 @@ def parse_args():
     add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
     add_arg('model_save_dir',   str,    'output',     "The path to save model.")
     add_arg('pretrained_model', str,    'ResNet50_cos_pretrained', "The init model path.")
-    add_arg('dataset',          str,   'icdar2017',  "coco2014, coco2017.")
-    add_arg('class_num',        int,   7,          "Class number.")
-    add_arg('data_dir',         str,   './coco_rabish/train2017/',        "The data root path.")
+    add_arg('dataset',          str,   'icdar2015',  "coco2014, coco2017.")
+    add_arg('class_num',        int,   2,          "Class number.")
+    add_arg('data_dir',         str,   'dataset/icdar2015',        "The data root path.")
     add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
@@ -144,17 +144,15 @@ def parse_args():
     add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
     # RCNN
     # RPN
-    add_arg('anchor_sizes',     int,    [8, 16, 32, 64, 128],  "The size of anchors.")
+    add_arg('anchor_sizes',     int,    [128, 256, 512],  "The size of anchors.")
     add_arg('aspect_ratios',    float,  [0.2, 0.5,1.0],    "The ratio of anchors.")
-    add_arg('variance',         float,  [1, 1, 1, 1, 1],    "The variance of anchors.")
+    add_arg('anchor_angle',    float,  [-30.0, 0.0, 30.0, 60.0, 90.0, 120.0],    "The angles of anchors.")
+    add_arg('variance',         float,  [1.0, 1.0, 1.0, 1.0, 1.0],    "The variance of anchors.")
     add_arg('rpn_stride',       float,  [16.,16.],    "Stride of the feature map that RPN is attached.")
     add_arg('rpn_nms_thresh',    float,   0.7,          "NMS threshold used on RPN proposals")
     # TRAIN VAL INFER
-    add_arg('MASK_ON', bool, False, "Option for different models. If False, choose faster_rcnn. If True, choose mask_rcnn")
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
     add_arg('max_size',         int,   1333,    "The resized image height.")
-    add_arg('scales', int,  [800],    "The resized image height.")
-    add_arg('batch_size_per_im',int,    512,    "fast rcnn head batch size")
     add_arg('pixel_means',     float,   [0.485, 0.456, 0.406], "pixel mean")
     add_arg('nms_thresh',    float, 0.5,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.05,    "score threshold for NMS.")
@@ -162,9 +160,6 @@ def parse_args():
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'ICDAR2015/tmp/',  "The image path used to inference and visualize.")
-    # ce
-    parser.add_argument(
-            '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

@@ -61,24 +61,15 @@ def train():
     learning_rate = cfg.learning_rate
     image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
-    if cfg.enable_ce:
-        fluid.default_startup_program().random_seed = 1000
-        fluid.default_main_program().random_seed = 1000
-        import random
-        random.seed(0)
-        np.random.seed(0)
-
     devices_num = get_device_num()
     total_batch_size = devices_num * cfg.TRAIN.im_per_batch
 
     use_random = True
-    if cfg.enable_ce:
-        use_random = False
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
-            model = model_builder.RCNN(
+            model = model_builder.RRPN(
                 add_conv_body_func=resnet.ResNet(),
                 add_roi_box_head_func=resnet.ResNetC5(),
                 use_pyreader=cfg.use_pyreader,
@@ -159,9 +150,6 @@ def train():
         exec_strategy=exec_strategy)
 
     shuffle = True
-    if cfg.enable_ce:
-        shuffle = False
-    # NOTE: do not shuffle dataset when using multi-process training 
     shuffle_seed = None
     if num_trainers > 1:
         shuffle_seed = 1

@@ -16,7 +16,6 @@ import os
 import numpy as np
 import paddle.fluid as fluid
 import math
-import box_utils
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -42,6 +41,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_labels_maps():
+    default_labels_maps = {1 : 'text'}
+    if cfg.dataset == 'icdar2015':
+        return default_labels_maps
+
     labels_map = {}
     with open(os.path.join(cfg.data_dir, 'label_list')) as f:
         lines = f.readlines()
@@ -175,92 +178,88 @@ def icdar_map(result, class_name, ovthresh):
     class_recs = {}
     npos = 0
     for k in im_ids:
-        R = [obj for obj in recs[str(k)] if obj['class'] == class_name]
-        bbox = np.array([x['bbox'] for x in R])
-        difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
-        det = [False] * len(R)
+        res = [obj for obj in recs[str(k)] if obj['class'] == class_name]
+        bbox = np.array([x['bbox'] for x in res])
+        difficult = np.array([x['difficult'] for x in res]).astype(np.bool)
+        det = [False] * len(res)
         npos = npos + sum(~difficult)
         class_recs[k] = {'bbox': bbox, 'difficult': difficult, 'det': det}
     image_ids = []
     confidence = []
-    BB = []
+    bbox = []
     for res in result:
         im_info = res['im_info']
         pred_boxes = res['bbox']
-        #print("class_name", class_name)
         for box in pred_boxes:
             if box[0] == class_name:
                 image_ids.append(res['im_id'])
                 confidence.append(box[1])
-                #print("###########", box[2:])
                 clipd_box = clip_box(box[2:].reshape(-1, 8), im_info)
-                #print(clipd_box)
-                BB.append(clipd_box[0])
+                bbox.append(clipd_box[0])
     confidence = np.array(confidence)
     sorted_ind = np.argsort(-confidence)
     sorted_scores = np.sort(-confidence)
-    #print(BB)
-    BB = np.array(BB)
-    BB = BB[sorted_ind, :]
+    bbox = np.array(bbox)
+    bbox = bbox[sorted_ind, :]
     image_ids = [image_ids[x] for x in sorted_ind]
     nd = len(image_ids)
     tp = np.zeros(nd)
     fp = np.zeros(nd)
     for d in range(nd):
-        R = class_recs[image_ids[d]]
-        bb = BB[d, :].astype(float)
+        res = class_recs[image_ids[d]]
+        bb = bbox[d, :].astype(float)
         ovmax = -np.inf
-        BBGT = R['bbox'].astype(float)
-        if BBGT.size > 0:
+        gt_bbox = res['bbox'].astype(float)
+        if gt_bbox.size > 0:
             # compute overlaps
-            BBGT_xmin = np.min(BBGT[:, 0::2], axis=1)
-            BBGT_ymin = np.min(BBGT[:, 1::2], axis=1)
-            BBGT_xmax = np.max(BBGT[:, 0::2], axis=1)
-            BBGT_ymax = np.max(BBGT[:, 1::2], axis=1)
+            gt_bbox_xmin = np.min(gt_bbox[:, 0::2], axis=1)
+            gt_bbox_ymin = np.min(gt_bbox[:, 1::2], axis=1)
+            gt_bbox_xmax = np.max(gt_bbox[:, 0::2], axis=1)
+            gt_bbox_ymax = np.max(gt_bbox[:, 1::2], axis=1)
             bb_xmin = np.min(bb[0::2])
             bb_ymin = np.min(bb[1::2])
             bb_xmax = np.max(bb[0::2])
             bb_ymax = np.max(bb[1::2])
 
-            ixmin = np.maximum(BBGT_xmin, bb_xmin)
-            iymin = np.maximum(BBGT_ymin, bb_ymin)
-            ixmax = np.minimum(BBGT_xmax, bb_xmax)
-            iymax = np.minimum(BBGT_ymax, bb_ymax)
+            ixmin = np.maximum(gt_bbox_xmin, bb_xmin)
+            iymin = np.maximum(gt_bbox_ymin, bb_ymin)
+            ixmax = np.minimum(gt_bbox_xmax, bb_xmax)
+            iymax = np.minimum(gt_bbox_ymax, bb_ymax)
             iw = np.maximum(ixmax - ixmin + 1., 0.)
             ih = np.maximum(iymax - iymin + 1., 0.)
             inters = iw * ih
 
             # union
             uni = ((bb_xmax - bb_xmin + 1.) * (bb_ymax - bb_ymin + 1.) +
-                   (BBGT_xmax - BBGT_xmin + 1.) *
-                   (BBGT_ymax - BBGT_ymin + 1.) - inters)
+                   (gt_bbox_xmax - gt_bbox_xmin + 1.) *
+                   (gt_bbox_ymax - gt_bbox_ymin + 1.) - inters)
 
             overlaps = inters / uni
-            BBGT_keep_mask = overlaps > 0
-            BBGT_keep = BBGT[BBGT_keep_mask, :]
-            BBGT_keep_index = np.where(overlaps > 0)[0]
+            gt_bbox_keep_mask = overlaps > 0
+            gt_bbox_keep = gt_bbox[gt_bbox_keep_mask, :]
+            gt_bbox_keep_index = np.where(overlaps > 0)[0]
 
-            def calcoverlaps(BBGT_keep, bb):
+            def calcoverlaps(gt_bbox_keep, bb):
                 overlaps = []
-                for index, GT in enumerate(BBGT_keep):
-                    p_g = polygon_from_points(BBGT_keep[index])
+                for index, _ in enumerate(gt_bbox_keep):
+                    p_g = polygon_from_points(gt_bbox_keep[index])
                     p_d = polygon_from_points(bb)
                     overlap = get_intersection_over_union(p_d, p_g)
                     overlaps.append(overlap)
                 return overlaps
 
-            if len(BBGT_keep) > 0:
-                overlaps = calcoverlaps(BBGT_keep, bb)
+            if len(gt_bbox_keep) > 0:
+                overlaps = calcoverlaps(gt_bbox_keep, bb)
 
                 ovmax = np.max(overlaps)
                 jmax = np.argmax(overlaps)
-                jmax = BBGT_keep_index[jmax]
+                jmax = gt_bbox_keep_index[jmax]
 
         if ovmax > ovthresh:
-            if not R['difficult'][jmax]:
-                if not R['det'][jmax]:
+            if not res['difficult'][jmax]:
+                if not res['det'][jmax]:
                     tp[d] = 1.
-                    R['det'][jmax] = 1
+                    res['det'][jmax] = 1
                 else:
                     fp[d] = 1.
         else:

@@ -35,7 +35,7 @@ _C.TRAIN.max_size = 1333
 _C.TRAIN.im_per_batch = 1
 
 # roi minibatch size per image
-_C.TRAIN.batch_size_per_im = 512
+_C.TRAIN.batch_size_per_im = 256
 
 # target fraction of foreground roi minibatch 
 _C.TRAIN.fg_fractrion = 0.25

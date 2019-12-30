@@ -25,7 +25,7 @@ import models.model_builder as model_builder
 import models.resnet_pp as resnet_pp
 #from models.resnet_pp import ResNetC5 as resnetc5
 from config import cfg
-from data_utils import DatasetPath
+from data_utils2 import DatasetPath
 import checkpoint as checkpoint
 #from train import *
 
@@ -41,7 +41,7 @@ def eval():
 #        add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
 #        use_pyreader=False,
 #        mode='infer')
-    model = model_builder.RCNN(
+    model = model_builder.RRPN(
         add_conv_body_func=resnet_pp.ResNet(),
         add_roi_box_head_func=resnet_pp.ResNetC5(),
         use_pyreader=False,

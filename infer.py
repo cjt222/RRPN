@@ -24,7 +24,7 @@ from utility import print_arguments, parse_args, check_gpu
 import models.model_builder as model_builder
 import models.resnet_pp as resnet_pp
 from config import cfg
-from data_utils import DatasetPath
+from data_utils2 import DatasetPath
 import checkpoint as checkpoint
 from eval_helper import clip_box
 
@@ -35,7 +35,7 @@ def infer():
     exe = fluid.Executor(place)
     image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
     class_nums = cfg.class_num
-    model = model_builder.RCNN(
+    model = model_builder.RRPN(
         add_conv_body_func=resnet_pp.ResNet(),
         add_roi_box_head_func=resnet_pp.ResNetC5(),
         use_pyreader=False,

@@ -21,7 +21,7 @@ from paddle.fluid.regularizer import L2Decay
 from config import cfg
 from models.ext_op.rrpn_lib import *
 
-class RCNN(object):
+class RRPN(object):
     def __init__(self,
                  add_conv_body_func=None,
                  add_roi_box_head_func=None,
@@ -45,9 +45,6 @@ class RCNN(object):
         self.fast_rcnn_heads(body_conv)
         if self.mode != 'train':
             self.eval_bbox()
-        # Mask RCNN
-        if cfg.MASK_ON:
-            self.mask_rcnn_heads(body_conv)
 
     def loss(self):
         losses = []
@@ -58,10 +55,6 @@ class RCNN(object):
         losses = [loss_cls, loss_bbox, rpn_cls_loss, rpn_reg_loss]
         rkeys = ['loss', 'loss_cls', 'loss_bbox', \
                  'loss_rpn_cls', 'loss_rpn_bbox',]
-        if cfg.MASK_ON:
-            loss_mask = self.mask_rcnn_loss()
-            losses = losses + [loss_mask]
-            rkeys = rkeys + ["loss_mask"]
         loss = fluid.layers.sum(losses)
         rloss = [loss] + losses
         return rloss, rkeys, self.rpn_rois
@@ -78,10 +71,6 @@ class RCNN(object):
             dtypes = [
                 'float32', 'float32', 'int32', 'int32', 'float32', 'int64'
             ]
-            if cfg.MASK_ON:
-                in_shapes.append([-1, 2])
-                lod_levels.append(3)
-                dtypes.append('float32')
             self.py_reader = fluid.layers.py_reader(
                 capacity=64,
                 shapes=in_shapes,
@@ -95,8 +84,6 @@ class RCNN(object):
             self.is_crowd = ins[3]
             self.im_info = ins[4]
             self.im_id = ins[5]
-            if cfg.MASK_ON:
-                self.gt_masks = ins[6]
         else:
             self.image = fluid.layers.data(
                 name='image', shape=image_shape, dtype='float32')
@@ -121,15 +108,8 @@ class RCNN(object):
         if self.mode == 'val':
             return [self.image, self.gt_box, self.gt_label, self.is_crowd,
                 self.im_info, self.im_id, self.difficult]
-        if not cfg.MASK_ON:
-            return [
-                self.image, self.gt_box, self.gt_label, self.is_crowd,
-                self.im_info, self.im_id
-            ]
-        return [
-            self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
-            self.im_id, self.gt_masks
-        ]
+        return [self.image, self.gt_box, self.gt_label, self.is_crowd,
+                self.im_info, self.im_id]
 
     def eval_bbox(self):
         self.im_scale = fluid.layers.slice(
@@ -147,7 +127,7 @@ class RCNN(object):
             bbox_pred_reshape = fluid.layers.reshape(bbox_pred_slice, (-1, 5))
             decoded_box = rrpn_box_coder(prior_box=boxes, \
                                          target_box=bbox_pred_reshape, \
-                                         prior_box_var=[10.0, 10.0, 5.0, 5.0, 1.0])
+                                         prior_box_var=cfg.bbox_reg_weights)
             score_slice = fluid.layers.slice(
                 cls_prob, axes=[1], starts=[i + 1], ends=[i + 2])
             score_slice = fluid.layers.reshape(score_slice, shape=[-1, 1])
@@ -222,13 +202,18 @@ class RCNN(object):
             bias_attr=ParamAttr(
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
         #fluid.layers.Print(rpn_conv)
+        print("anchor_sizes", cfg.anchor_sizes)
+        print("aspect_ratios", cfg.aspect_ratios)
+        print("cfg.anchor_angle", cfg.anchor_angle)
+        print("cfg.variance", cfg.variance)
+        print("cfg.rpn_stride", cfg.rpn_stride)
         self.anchor, self.var = rotated_anchor_generator(
             input=rpn_conv,
-            anchor_sizes=[128, 256, 512],
-            aspect_ratios=[0.2, 0.5, 1.0],
-            angles=(-30.0, 0.0, 30.0, 60.0, 90.0, 120.0),
-            variance=[1.0, 1.0, 1.0, 1.0, 1.0],
-            stride=[16.0, 16.0],
+            anchor_sizes=cfg.anchor_sizes,
+            aspect_ratios=cfg.aspect_ratios,
+            angles=cfg.anchor_angle,
+            variance=cfg.variance,
+            stride=cfg.rpn_stride,
             offset=0.5)
         num_anchor = self.anchor.shape[2]
         # Proposal classification scores
@@ -274,6 +259,10 @@ class RCNN(object):
         nms_thresh = param_obj.rpn_nms_thresh
         min_size = param_obj.rpn_min_size
         eta = param_obj.rpn_eta
+        print("pre_nms_top_n", pre_nms_top_n)
+        print("post_nms_top_n", post_nms_top_n)
+        print("param_obj.rpn_nms_thresh", param_obj.rpn_nms_thresh)
+        print("param_obj.rpn_min_size", param_obj.rpn_min_size)
         self.rpn_rois, self.rpn_roi_probs = rotated_generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=self.rpn_bbox_pred,
@@ -282,20 +271,26 @@ class RCNN(object):
             variances=self.var,
             pre_nms_top_n=pre_nms_top_n,
             post_nms_top_n=post_nms_top_n,
-            nms_thresh=0.7,
-            min_size=0)
+            nms_thresh=param_obj.rpn_nms_thresh,
+            min_size=param_obj.rpn_min_size)
         if self.mode == 'train':
+            print("cfg.TRAIN.batch_size_per_im", cfg.TRAIN.batch_size_per_im)
+            print("cfg.TRAIN.fg_fractrion", cfg.TRAIN.fg_fractrion)
+            print("cfg.TRAIN.fg_thresh", cfg.TRAIN.fg_thresh)
+            print("cfg.TRAIN.bg_thresh_hi", cfg.TRAIN.bg_thresh_hi)
+            print("cfg.TRAIN.bg_thresh_lo", cfg.TRAIN.bg_thresh_lo)
+            print("cfg.bbox_reg_weights", cfg.bbox_reg_weights)
             outs = rotated_generate_proposal_labels(
                 rpn_rois=self.rpn_rois,
                 gt_classes=self.gt_label,
                 is_crowd=self.is_crowd,
                 gt_boxes=self.gt_box,
                 im_info=self.im_info,
-                batch_size_per_im=256,
-                fg_fraction=0.25,
-                fg_thresh=0.5,
-                bg_thresh_hi=0.5,
-                bg_thresh_lo=0.0,
+                batch_size_per_im=cfg.TRAIN.batch_size_per_im,
+                fg_fraction=cfg.TRAIN.fg_fractrion,
+                fg_thresh=cfg.TRAIN.fg_thresh,
+                bg_thresh_hi=cfg.TRAIN.bg_thresh_hi,
+                bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
                 bbox_reg_weights=cfg.bbox_reg_weights,
                 class_nums=cfg.class_num,
                 use_random=True)
@@ -305,7 +300,6 @@ class RCNN(object):
             self.bbox_targets = outs[2]
             self.bbox_inside_weights = outs[3]
             self.bbox_outside_weights = outs[4]
-            #fluid.layers.Print(self.rois, summarize=-1)
 
     def fast_rcnn_heads(self, roi_input):
         if self.mode == 'train':

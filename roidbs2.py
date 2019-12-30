@@ -94,7 +94,7 @@ class ICDAR2015Dataset(object):
                         width = edge1
                         height = edge2
                         if pt1[0] - pt2[0] != 0:
-                            angle = -np.arctan(float(pt1[1] - pt2[1]) / float(pt1[0] - pt2[0])) / 3.1415926 * 180
+                            angle = -np.arctan(float(pt1[1] - pt2[1]) / float(pt1[0] - pt2[0])) / np.pi * 180
                         else:
                             angle = 90.0
                     elif edge2 >= edge1:
@@ -102,7 +102,7 @@ class ICDAR2015Dataset(object):
                         height = edge1
                         # print pt2[0], pt3[0]
                         if pt2[0] - pt3[0] != 0:
-                            angle = -np.arctan(float(pt2[1] - pt3[1]) / float(pt2[0] - pt3[0])) / 3.1415926 * 180
+                            angle = -np.arctan(float(pt2[1] - pt3[1]) / float(pt2[0] - pt3[0])) / np.pi * 180
                         else:
                             angle = 90.0
                     if angle < -45.0:
@@ -126,14 +126,14 @@ class ICDAR2015Dataset(object):
                         width = edge1
                         height = edge2
                         if pt1[0] - pt2[0] != 0:
-                            angle = -np.arctan(float(pt1[1] - pt2[1]) / float(pt1[0] - pt2[0])) / 3.1415926 * 180
+                            angle = -np.arctan(float(pt1[1] - pt2[1]) / float(pt1[0] - pt2[0])) / np.pi * 180
                         else:
                             angle = 90.0
                     elif edge2 >= edge1:
                         width = edge2
                         height = edge1
                         if pt2[0] - pt3[0] != 0:
-                            angle = -np.arctan(float(pt2[1] - pt3[1]) / float(pt2[0] - pt3[0])) / 3.1415926 * 180
+                            angle = -np.arctan(float(pt2[1] - pt3[1]) / float(pt2[0] - pt3[0])) / np.pi * 180
                         else:
                             angle = 90.0
                     if angle < -45.0:
@@ -246,7 +246,6 @@ class ICDAR2017Dataset(object):
                 # can get the text information
                 if len(gt_ind) > 3:
                     if self.mode == 'val':
-                       print(labels_map)
                        gt_classes.append(labels_map[gt_ind[-1]])
                     else:
                         if gt_ind[-1] not in class_name:
@@ -265,7 +264,7 @@ class ICDAR2017Dataset(object):
                         width = edge1
                         height = edge2
                         if pt1[0] - pt2[0] != 0:
-                            angle = -np.arctan(float(pt1[1] - pt2[1]) / float(pt1[0] - pt2[0])) / 3.1415926 * 180
+                            angle = -np.arctan(float(pt1[1] - pt2[1]) / float(pt1[0] - pt2[0])) / np.pi * 180
                         else:
                             angle = 90.0
                     elif edge2 >= edge1:
@@ -273,7 +272,7 @@ class ICDAR2017Dataset(object):
                         height = edge1
                         # print pt2[0], pt3[0]
                         if pt2[0] - pt3[0] != 0:
-                            angle = -np.arctan(float(pt2[1] - pt3[1]) / float(pt2[0] - pt3[0])) / 3.1415926 * 180
+                            angle = -np.arctan(float(pt2[1] - pt3[1]) / float(pt2[0] - pt3[0])) / np.pi * 180
                         else:
                             angle = 90.0
                     if angle < -45.0:
