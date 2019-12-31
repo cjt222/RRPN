@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 class ICDAR2015Dataset(object):
-    """A class representing a COCO json dataset."""
+    """A class representing a ICDAR2015 dataset."""
 
     def __init__(self, mode):
         print('Creating: {}'.format(cfg.dataset))
@@ -54,11 +54,8 @@ class ICDAR2015Dataset(object):
         self.gt_dir = file_list
         
     def get_roidb(self):
-        """Return an roidb corresponding to the json dataset. Optionally:
+        """Return an roidb corresponding to the txt dataset. Optionally:
            - include ground truth boxes in the roidb
-           - add proposals specified in a proposals file
-           - filter proposals based on a minimum side length
-           - filter proposals that intersect with crowd regions
         """
         image_list = os.listdir(self.image_dir)
         image_list.sort()
@@ -194,7 +191,7 @@ class ICDAR2015Dataset(object):
                     
      
 class ICDAR2017Dataset(object):
-    """A class representing a COCO json dataset."""
+    """A class representing a ICDAR2017 dataset."""
 
     def __init__(self, mode):
         print('Creating: {}'.format(cfg.dataset))
@@ -211,9 +208,6 @@ class ICDAR2017Dataset(object):
     def get_roidb(self):
         """Return an roidb corresponding to the json dataset. Optionally:
            - include ground truth boxes in the roidb
-           - add proposals specified in a proposals file
-           - filter proposals based on a minimum side length
-           - filter proposals that intersect with crowd regions
         """
         image_list = os.listdir(self.image_dir)
         image_list.sort()

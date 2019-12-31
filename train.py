@@ -16,7 +16,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
-#import torch
 
 def set_paddle_flags(flags):
     for key, value in flags.items():
@@ -110,37 +109,6 @@ def train():
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_iteration_per_drop_scope = 1
     exe.run(startup_prog)
-    #train_prog = fluid.default_main_program()
-    #if cfg.pretrained_model:
-#        #path = "/paddle/rrpn_baseline/RRPN_pytorch/models/IC-13-15-17-Trial-renew/model_0000001.pkl"
-    #    checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrained_model)
-#    if cfg.parallel:
-#        build_strategy = fluid.BuildStrategy()
-#        build_strategy.memory_optimize = False
-#        build_strategy.enable_inplace = True
-#        exec_strategy = fluid.ExecutionStrategy()
-#        exec_strategy.num_iteration_per_drop_scope = 10
-#
-#        if num_trainers > 1 and cfg.use_gpu:
-#            dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
-#                                                 #fluid.default_main_program())
-#            # NOTE: the process is fast when num_threads is 1 
-#            # for multi-process training.
-#            exec_strategy.num_threads = 1
-#
-#        train_exe = fluid.ParallelExecutor(
-#            use_cuda=bool(cfg.use_gpu),
-#            loss_name=loss.name,
-#            build_strategy=build_strategy,
-#            exec_strategy=exec_strategy)
-#    else:
-#        train_exe = exe
-
-#    build_strategy = fluid.BuildStrategy()
-#    build_strategy.fuse_all_optimizer_ops = False
-#    build_strategy.fuse_elewise_add_act_ops = True
-#    exec_strategy = fluid.ExecutionStrategy()
-#    exec_strategy.num_iteration_per_drop_scope = 1
 
     if cfg.pretrained_model:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrained_model)
@@ -204,7 +172,7 @@ def train():
                     print(strs)
                 sys.stdout.flush()
                 if (iter_id) % cfg.TRAIN.snapshot_iter == 0:
-                    save_name = "model_iter{}".format(iter_id)
+                    save_name = "{}".format(iter_id)
                     checkpoint.save(exe, train_prog, os.path.join(cfg.model_save_dir, save_name))
                     #save_model("model_iter{}".format(iter_id))
             end_time = time.time()
@@ -243,21 +211,12 @@ def train():
                 print(strs)
             sys.stdout.flush()
             if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
-                save_model("model_iter{}".format(iter_id))
+                save_model("{}".format(iter_id))
             if (iter_id + 1) == cfg.max_iter:
                 break
-            #print("***********************88rpn_rois:", outs[-1])
         end_time = time.time()
         total_time = end_time - start_time
         last_loss = np.array(outs[0]).mean()
-        # only for ce
-        if cfg.enable_ce:
-            gpu_num = devices_num
-            epoch_idx = iter_id + 1
-            loss = last_loss
-            print("kpis\teach_pass_duration_card%s\t%s" %
-                  (gpu_num, total_time / epoch_idx))
-            print("kpis\ttrain_loss_card%s\t%s" % (gpu_num, loss))
 
     if cfg.use_pyreader:
         train_loop_pyreader()

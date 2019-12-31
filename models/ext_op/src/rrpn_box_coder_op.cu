@@ -21,6 +21,7 @@ limitations under the License. */
 namespace paddle {
 namespace operators {
 
+#define PI 3.141592654
 
 template <typename T>
 __global__ void DecodeCenterSizeKernel(const T* prior_box_data,
@@ -75,11 +76,11 @@ __global__ void DecodeCenterSizeKernel(const T* prior_box_data,
         prior_box_center_y;
 
     target_box_angle = (target_box_data[idx * len + 4] / box_var_angle) * 1.0 /
-                           3.141592653 * 180 +
+                           PI * 180 +
                        prior_box_angle;
 
-    T a_cos = cos(3.1415926535 / 180 * target_box_angle);
-    T a_sin = -sin(3.1415926535 / 180 * target_box_angle);
+    T a_cos = cos(PI / 180 * target_box_angle);
+    T a_sin = -sin(PI / 180 * target_box_angle);
 
     T rotation_matrix[3][3];
 

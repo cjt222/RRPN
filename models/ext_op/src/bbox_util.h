@@ -21,6 +21,8 @@ limitations under the License. */
 namespace paddle {
 namespace operators {
 
+#define PI 3.141592654
+
 struct RangeInitFunctor {
   int start;
   int delta;
@@ -36,11 +38,11 @@ inline T trangle_area(T* a, T* b, T* c) {
 
 
 template <typename T>
-inline T area(T* int_pts, int num_of_inter) {
-  float area = 0.0;
+inline T get_area(T* int_pts, int num_of_inter) {
+  T area = 0.0;
   for (int i = 0; i < num_of_inter - 2; i++) {
     area +=
-        fabs(trangle_area(int_pts, int_pts + 2 * i + 2, int_pts + 2 * i + 4));
+        fabs(trangle_area<T>(int_pts, int_pts + 2 * i + 2, int_pts + 2 * i + 4));
   }
   return area;
 }
@@ -48,10 +50,10 @@ inline T area(T* int_pts, int num_of_inter) {
 template <typename T>
 inline void reorder_pts(T* int_pts, int num_of_inter) {
   if (num_of_inter > 0) {
-    float center[2];
+    T center[2] = {0.0, 0.0};
 
-    center[0] = 0.0;
-    center[1] = 0.0;
+    //center[0] = 0.0;
+    //center[1] = 0.0;
 
     for (int i = 0; i < num_of_inter; i++) {
       center[0] += int_pts[2 * i];
@@ -60,9 +62,9 @@ inline void reorder_pts(T* int_pts, int num_of_inter) {
     center[0] /= num_of_inter;
     center[1] /= num_of_inter;
 
-    float vs[16];
-    float v[2];
-    float d;
+    T vs[16];
+    T v[2];
+    T d;
     for (int i = 0; i < num_of_inter; i++) {
       v[0] = int_pts[2 * i] - center[0];
       v[1] = int_pts[2 * i + 1] - center[1];
@@ -99,42 +101,42 @@ inline void reorder_pts(T* int_pts, int num_of_inter) {
 
 template <typename T>
 inline bool inter2line(T* pts1, T* pts2, int i, int j, T* temp_pts) {
-  float a[2];
-  float b[2];
-  float c[2];
-  float d[2];
+  T a[2] = {pts1[2 * i], pts1[2 * i + 1]};
+  T b[2] = {pts1[2 * ((i + 1) % 4)], pts1[2 * ((i + 1) % 4) + 1]};
+  T c[2] = {pts2[2 * j], pts2[2 * j + 1]};
+  T d[2] = {pts2[2 * ((j + 1) % 4)], pts2[2 * ((j + 1) % 4) + 1]};
 
-  float area_abc, area_abd, area_cda, area_cdb;
+  T area_abc, area_abd, area_cda, area_cdb;
 
-  a[0] = pts1[2 * i];
-  a[1] = pts1[2 * i + 1];
+//  a[0] = pts1[2 * i];
+//  a[1] = pts1[2 * i + 1];
+//
+//  b[0] = pts1[2 * ((i + 1) % 4)];
+//  b[1] = pts1[2 * ((i + 1) % 4) + 1];
+//
+//  c[0] = pts2[2 * j];
+//  c[1] = pts2[2 * j + 1];
+//
+//  d[0] = pts2[2 * ((j + 1) % 4)];
+//  d[1] = pts2[2 * ((j + 1) % 4) + 1];
 
-  b[0] = pts1[2 * ((i + 1) % 4)];
-  b[1] = pts1[2 * ((i + 1) % 4) + 1];
-
-  c[0] = pts2[2 * j];
-  c[1] = pts2[2 * j + 1];
-
-  d[0] = pts2[2 * ((j + 1) % 4)];
-  d[1] = pts2[2 * ((j + 1) % 4) + 1];
-
-  area_abc = trangle_area(a, b, c);
-  area_abd = trangle_area(a, b, d);
+  area_abc = trangle_area<T>(a, b, c);
+  area_abd = trangle_area<T>(a, b, d);
 
   if (area_abc * area_abd >= -1e-5) {
     return false;
   }
 
-  area_cda = trangle_area(c, d, a);
+  area_cda = trangle_area<T>(c, d, a);
   area_cdb = area_cda + area_abc - area_abd;
 
   if (area_cda * area_cdb >= -1e-5) {
     return false;
   }
-  float t = area_cda / (area_abd - area_abc);
+  T t = area_cda / (area_abd - area_abc);
 
-  float dx = t * (b[0] - a[0]);
-  float dy = t * (b[1] - a[1]);
+  T dx = t * (b[0] - a[0]);
+  T dy = t * (b[1] - a[1]);
   temp_pts[0] = a[0] + dx;
   temp_pts[1] = a[1] + dy;
 
@@ -143,28 +145,28 @@ inline bool inter2line(T* pts1, T* pts2, int i, int j, T* temp_pts) {
 
 template <typename T>
 inline bool inrect(T pt_x, T pt_y, T* pts) {
-  double ab[2];
-  double ad[2];
-  double ap[2];
+  T ab[2] = {pts[2] - pts[0], pts[3] - pts[1]};
+  T ad[2] = {pts[6] - pts[0], pts[7] - pts[1]};
+  T ap[2] = {pt_x - pts[0], pt_y - pts[1]};
 
-  double abab;
-  double abap;
-  double adad;
-  double adap;
+  // double abab;
+  // double abap;
+  // double adad;
+  // double adap;
 
-  ab[0] = pts[2] - pts[0];
-  ab[1] = pts[3] - pts[1];
+//  ab[0] = pts[2] - pts[0];
+//  ab[1] = pts[3] - pts[1];
+//
+//  ad[0] = pts[6] - pts[0];
+//  ad[1] = pts[7] - pts[1];
+//
+//  ap[0] = pt_x - pts[0];
+//  ap[1] = pt_y - pts[1];
 
-  ad[0] = pts[6] - pts[0];
-  ad[1] = pts[7] - pts[1];
-
-  ap[0] = pt_x - pts[0];
-  ap[1] = pt_y - pts[1];
-
-  abab = ab[0] * ab[0] + ab[1] * ab[1];
-  abap = ab[0] * ap[0] + ab[1] * ap[1];
-  adad = ad[0] * ad[0] + ad[1] * ad[1];
-  adap = ad[0] * ap[0] + ad[1] * ap[1];
+  T abab = ab[0] * ab[0] + ab[1] * ab[1];
+  T abap = ab[0] * ap[0] + ab[1] * ap[1];
+  T adad = ad[0] * ad[0] + ad[1] * ad[1];
+  T adap = ad[0] * ap[0] + ad[1] * ap[1];
   bool result = (abab - abap >= -1) and (abap >= -1) and (adad - adap >= -1) and
                 (adap >= -1);
   return result;
@@ -176,12 +178,12 @@ inline int inter_pts(T* pts1, T* pts2, T* int_pts) {
   int num_of_inter = 0;
 
   for (int i = 0; i < 4; i++) {
-    if (inrect(pts1[2 * i], pts1[2 * i + 1], pts2)) {
+    if (inrect<T>(pts1[2 * i], pts1[2 * i + 1], pts2)) {
       int_pts[num_of_inter * 2] = pts1[2 * i];
       int_pts[num_of_inter * 2 + 1] = pts1[2 * i + 1];
       num_of_inter++;
     }
-    if (inrect(pts2[2 * i], pts2[2 * i + 1], pts1)) {
+    if (inrect<T>(pts2[2 * i], pts2[2 * i + 1], pts1)) {
       int_pts[num_of_inter * 2] = pts2[2 * i];
       int_pts[num_of_inter * 2 + 1] = pts2[2 * i + 1];
       num_of_inter++;
@@ -192,7 +194,7 @@ inline int inter_pts(T* pts1, T* pts2, T* int_pts) {
 
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      bool has_pts = inter2line(pts1, pts2, i, j, temp_pts);
+      bool has_pts = inter2line<T>(pts1, pts2, i, j, temp_pts);
       if (has_pts) {
         int_pts[num_of_inter * 2] = temp_pts[0];
         int_pts[num_of_inter * 2 + 1] = temp_pts[1];
@@ -210,28 +212,28 @@ inline void convert_region(T* pts,
                            const framework::Tensor& _region,
                            int index) {
   auto region = framework::EigenTensor<T, 2>::From(_region);
-  float angle = region(index, 4);
-  float a_cos = cos(angle / 180.0 * 3.1415926535);
-  float a_sin = -sin(angle / 180.0 * 3.1415926535);  // anti clock-wise
+  T angle = region(index, 4);
+  T a_cos = cos(angle / 180.0 * PI);
+  T a_sin = -sin(angle / 180.0 * PI);  // anti clock-wise
 
-  float ctr_x = region(index, 0);
-  float ctr_y = region(index, 1);
-  float h = region(index, 3);
-  float w = region(index, 2);
+  T ctr_x = region(index, 0);
+  T ctr_y = region(index, 1);
+  T h = region(index, 3);
+  T w = region(index, 2);
 
 
-  float pts_x[4];
-  float pts_y[4];
+  T pts_x[4] = {-w / 2,  -w / 2,  w / 2, w / 2};
+  T pts_y[4] = {-h / 2, h / 2,  h / 2, -h / 2};
 
-  pts_x[0] = -w / 2;
-  pts_x[1] = -w / 2;
-  pts_x[2] = w / 2;
-  pts_x[3] = w / 2;
-
-  pts_y[0] = -h / 2;
-  pts_y[1] = h / 2;
-  pts_y[2] = h / 2;
-  pts_y[3] = -h / 2;
+//  pts_x[0] = -w / 2;
+//  pts_x[1] = -w / 2;
+//  pts_x[2] = w / 2;
+//  pts_x[3] = w / 2;
+//
+//  pts_y[0] = -h / 2;
+//  pts_y[1] = h / 2;
+//  pts_y[2] = h / 2;
+//  pts_y[3] = -h / 2;
 
   for (int i = 0; i < 4; i++) {
     pts[2 * i] = a_cos * pts_x[i] - a_sin * pts_y[i] + ctr_x;
@@ -251,14 +253,14 @@ inline float inter(const framework::Tensor& _region1,
   int num_of_inter;
 
 
-  convert_region(pts1, _region1, r);
-  convert_region(pts2, _region2, c);
+  convert_region<T>(pts1, _region1, r);
+  convert_region<T>(pts2, _region2, c);
 
-  num_of_inter = inter_pts(pts1, pts2, int_pts);
+  num_of_inter = inter_pts<T>(pts1, pts2, int_pts);
 
-  reorder_pts(int_pts, num_of_inter);
+  reorder_pts<T>(int_pts, num_of_inter);
 
-  return area(int_pts, num_of_inter);
+  return get_area<T>(int_pts, num_of_inter);
 }
 
 template <typename T>
@@ -285,6 +287,7 @@ inline float devRotateIoU(const framework::Tensor& _region1,
   if (result < 0) {
     result = 0.0;
   }
+  // may have bugs which cause overlap > 1
   if (result > 1.00000001) {
     result = 0.0;
   }
@@ -336,7 +339,7 @@ inline void BoxToDelta2(const int box_num,
     if (gt_angle >= 120 && ex_angle <= -30) {
       trg(i, 4) = trg(i, 4) - 180.0;
     }
-    trg(i, 4) = (3.14159265358979323846264338327950288 / 180) * trg(i, 4);
+    trg(i, 4) = (PI / 180) * trg(i, 4);
   }
 }
 

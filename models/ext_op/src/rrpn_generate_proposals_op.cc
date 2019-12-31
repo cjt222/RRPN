@@ -30,6 +30,7 @@ using Tensor = framework::Tensor;
 using LoDTensor = framework::LoDTensor;
 
 static const double kBBoxClipDefault = std::log(1000.0 / 16.0);
+#define PI 3.141592654
 
 static void RRPNAppendProposals(Tensor *dst,
                                 int64_t offset,
@@ -46,7 +47,7 @@ static void RRPNAppendProposals(Tensor *dst,
 
 template <class T>
 inline T axr(T x, T r) {
-  return 0.5 * 3.1415926535 * r * r - x * sqrt(r * r - x * x) -
+  return 0.5 * PI * r * r - x * sqrt(r * r - x * x) -
          r * r * std::asin(x / r);
 }
 
@@ -122,7 +123,7 @@ static inline void RBoxCoder(const platform::DeviceContext &ctx,
                     anchor_height;
       bbox_angle =
           (bbox_deltas_data[i * len + 4] / variances_data[i * len + 4]) * 1.0 /
-              3.141592653 * 180 +
+              PI * 180 +
           anchor_angle;
 
     } else {
@@ -136,7 +137,7 @@ static inline void RBoxCoder(const platform::DeviceContext &ctx,
       bbox_height = std::exp(std::min<T>(bbox_deltas_data[i * len + 3],
                                          kBBoxClipDefault)) *
                     anchor_height;
-      bbox_angle = bbox_deltas_data[i * len + 4] * 1.0 / 3.141592653 * 180 +
+      bbox_angle = bbox_deltas_data[i * len + 4] * 1.0 / PI * 180 +
                    anchor_angle;
     }
 
@@ -377,8 +378,8 @@ inline int inter_pts(T *pts1, T *pts2, T *int_pts) {
 template <typename T>
 inline void convert_region(T *pts, const T *region) {
   float angle = region[4];
-  float a_cos = cos(angle / 180.0 * 3.1415926535);
-  float a_sin = -sin(angle / 180.0 * 3.1415926535);  // anti clock-wise
+  float a_cos = cos(angle / 180.0 * PI);
+  float a_sin = -sin(angle / 180.0 * PI);  // anti clock-wise
 
   float ctr_x = region[0];
   float ctr_y = region[1];

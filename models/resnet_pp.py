@@ -24,7 +24,6 @@ class ResNet(object):
         norm_decay (float): weight decay for normalization layer weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of stages whose feature maps are returned
-        dcn_v2_stages (list): index of stages who select deformable conv v2
     """
     __shared__ = ['norm_type', 'freeze_norm', 'weight_prefix_name']
 
@@ -36,7 +35,6 @@ class ResNet(object):
                  norm_decay=0.,
                  variant='b',
                  feature_maps=4,
-                 #dcn_v2_stages=[],
                  weight_prefix_name=''):
         super(ResNet, self).__init__()
 
@@ -58,7 +56,6 @@ class ResNet(object):
         self.variant = variant
         self._model_type = 'ResNet'
         self.feature_maps = feature_maps
-        #self.dcn_v2_stages = dcn_v2_stages
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
             34: ([3, 4, 6, 3], self.basicblock),
@@ -100,8 +97,7 @@ class ResNet(object):
                    stride=1,
                    groups=1,
                    act=None,
-                   name=None):#,
-                   #dcn_v2=False):
+                   name=None):
         _name = self.prefix_name + name if self.prefix_name != '' else name
 #        if not dcn_v2:
         conv = fluid.layers.conv2d(

@@ -3,6 +3,6 @@ cd "$DIR"
 
 # Download the data.
 echo "Downloading..."
-wget http://paddlemodels.bj.bcebos.com/faster_rcnn/imagenet_resnet50_fusebn.tar.gz
+wget https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
 echo "Extracting..."
-tar -xf imagenet_resnet50_fusebn.tar.gz
+tar -xf ResNet50_cos_pretrained.tar

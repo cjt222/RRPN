@@ -79,6 +79,7 @@ def get_image_blob(roidb, mode):
         img -= mean
         img /= std
         img = img.transpose((2, 0, 1))
+        np.save("./l_img,npy", img)
         return img, im_scale, need_gt_boxes, need_gt_label
           
     
@@ -144,6 +145,7 @@ def _resize(im, target_size=800, max_size=1333):
         im = im.resize((int(resize_w), int(resize_h)), 2)
         im = np.array(im)
         return im, im_scale_x
+
     
 def _rotation(image, gt_boxes, gt_label, prob, fixed_angle=-1, r_range=(360, 0), gt_margin=1.4):
     rotate_range = r_range[0]
@@ -155,9 +157,7 @@ def _rotation(image, gt_boxes, gt_label, prob, fixed_angle=-1, r_range=(360, 0),
     '''
     rotate image
     '''
-    # convert to cv2 image
     image = np.array(image)
-    #print("&&&", image.shape)
     (h, w) = image.shape[:2]
     scale = 1.0
     # set the rotation center
@@ -166,7 +166,6 @@ def _rotation(image, gt_boxes, gt_label, prob, fixed_angle=-1, r_range=(360, 0),
     M = cv2.getRotationMatrix2D(center, angle, scale)
     image = cv2.warpAffine(image, M, (w, h))
     # back to PIL image
-    #image = Image.fromarray(image)
     im_width, im_height =  w, h
     '''
     rotate boxes

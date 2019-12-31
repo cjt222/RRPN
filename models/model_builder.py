@@ -296,7 +296,7 @@ class RRPN(object):
                 bg_thresh_lo=cfg.TRAIN.bg_thresh_lo,
                 bbox_reg_weights=cfg.bbox_reg_weights,
                 class_nums=cfg.class_num,
-                use_random=True)
+                use_random=self.use_random)
 
             self.rois = outs[0]
             self.labels_int32 = outs[1]
@@ -390,7 +390,7 @@ class RRPN(object):
                 rpn_fg_fraction=cfg.TRAIN.rpn_fg_fraction,
                 rpn_positive_overlap=cfg.TRAIN.rpn_positive_overlap,
                 rpn_negative_overlap=cfg.TRAIN.rpn_negative_overlap,
-                use_random=True)
+                use_random=self.use_random)
         score_tgt = fluid.layers.cast(x=score_tgt, dtype='float32')
         rpn_cls_loss = fluid.layers.sigmoid_cross_entropy_with_logits(
             x=score_pred, label=score_tgt)

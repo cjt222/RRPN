@@ -28,6 +28,7 @@ using LoDTensor = framework::LoDTensor;
 
 static constexpr int kNumCUDAThreads = 512;
 static constexpr int kNumMaxinumNumBlocks = 4096;
+#define PI 3.141592654
 
 static inline int NumBlocks(const int N) {
   return std::min((N + kNumCUDAThreads - 1) / kNumCUDAThreads,
@@ -68,7 +69,7 @@ __global__ void RROIAlignForward(const int nthreads,
     T cy = offset_bottom_rois[1];
     T h = offset_bottom_rois[3];
     T w = offset_bottom_rois[2];
-    T angle = offset_bottom_rois[4] / 180.0 * 3.1415926535;
+    T angle = offset_bottom_rois[4] / 180.0 * PI;
 
     // TransformPrepare
     T dx = -pooled_width / 2.0;
