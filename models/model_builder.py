@@ -36,10 +36,8 @@ class RRPN(object):
 
     def build_model(self, image_shape):
         self.build_input(image_shape)
-        #fluid.layers.Print(self.image)
         body_conv = self.add_conv_body_func(self.image)
         # RPN
-        #fluid.layers.Print(body_conv)
         self.rpn_heads(body_conv)
         # Fast RCNN
         self.fast_rcnn_heads(body_conv)
@@ -188,7 +186,6 @@ class RRPN(object):
 
 
     def rpn_heads(self, rpn_input):
-        #fluid.layers.Print(rpn_input)
         # RPN hidden representation
         dim_out = rpn_input.shape[1]
         rpn_conv = fluid.layers.conv2d(
@@ -204,7 +201,6 @@ class RRPN(object):
                     loc=0., scale=0.01)),
             bias_attr=ParamAttr(
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
-        #fluid.layers.Print(rpn_conv)
         print("anchor_sizes", cfg.anchor_sizes)
         print("aspect_ratios", cfg.aspect_ratios)
         print("cfg.anchor_angle", cfg.anchor_angle)
@@ -251,8 +247,6 @@ class RRPN(object):
                 name="rpn_bbox_pred_b",
                 learning_rate=2.,
                 regularizer=L2Decay(0.)))
-        #fluid.layers.Print(self.rpn_cls_score)
-        #fluid.layers.Print(self.rpn_bbox_pred)
         rpn_cls_score_prob = fluid.layers.sigmoid(
             self.rpn_cls_score, name='rpn_cls_score_prob')
 
@@ -318,7 +312,6 @@ class RRPN(object):
         self.res5_2_sum = self.add_roi_box_head_func(pool)
         rcnn_out = fluid.layers.pool2d(
             self.res5_2_sum, pool_type='avg', pool_size=7, name='res5_pool')
-        #fluid.layers.Print(rcnn_out)
         self.cls_score = fluid.layers.fc(input=rcnn_out,
                                          size=cfg.class_num,
                                          act=None,
@@ -343,8 +336,6 @@ class RRPN(object):
                                              name='bbox_pred_b',
                                              learning_rate=2.,
                                              regularizer=L2Decay(0.)))
-        #fluid.layers.Print(self.cls_score)
-        #fluid.layers.Print(self.bbox_pred)
 
     def fast_rcnn_loss(self):
         labels_int64 = fluid.layers.cast(x=self.labels_int32, dtype='int64')
@@ -381,11 +372,9 @@ class RRPN(object):
                 bbox_pred=rpn_bbox_pred_reshape,
                 cls_logits=rpn_cls_score_reshape,
                 anchor_box=anchor_reshape,
-                #anchor_var=var_reshape,
                 gt_boxes=self.gt_box,
-                #is_crowd=self.is_crowd,
                 im_info=self.im_info,
-                rpn_batch_size_per_im=256,
+                rpn_batch_size_per_im=cfg.TRAIN.rpn_batch_size_per_im,
                 rpn_straddle_thresh=-1,
                 rpn_fg_fraction=cfg.TRAIN.rpn_fg_fraction,
                 rpn_positive_overlap=cfg.TRAIN.rpn_positive_overlap,
@@ -400,9 +389,7 @@ class RRPN(object):
         rpn_reg_loss = fluid.layers.smooth_l1(
             x=loc_pred,
             y=loc_tgt,
-            sigma=3.0)#,
-            #inside_weight=bbox_weight,
-            #outside_weight=bbox_weight)
+            sigma=3.0)
         rpn_reg_loss = fluid.layers.reduce_sum(
             rpn_reg_loss, name='loss_rpn_bbox')
         score_shape = fluid.layers.shape(score_tgt)
