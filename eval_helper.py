@@ -280,7 +280,7 @@ def icdar_map_eval(result, num_class):
         rec, prec, ap = icdar_map(result, i + 1, ovthresh=0.5)
         map = map + ap
     map = map / (num_class - 1)
-    print('mAP {}'.format(map))
+    logger.info('mAP {}'.format(map))
 
 
 def icdar_box_eval(result, thresh):
@@ -375,9 +375,6 @@ def icdar_box_eval(result, thresh):
     logger.info('Recall {}'.format(method_recall))
     logger.info('Precision {}'.format(method_precision))
     logger.info('F1 {}'.format(method_hmean))
-    print('Recall {}'.format(method_recall))
-    print('Precision {}'.format(method_precision))
-    print('F1 {}'.format(method_hmean))
 
 def icdar_eval(result):
     if cfg.dataset == 'icdar2015':

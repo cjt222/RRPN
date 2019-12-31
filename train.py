@@ -42,7 +42,7 @@ import paddle.fluid as fluid
 import reader
 import models.model_builder as model_builder
 #import models.resnet as resnet
-import models.resnet_pp as resnet
+import models.resnet as resnet
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
 import checkpoint as checkpoint

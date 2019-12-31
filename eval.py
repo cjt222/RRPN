@@ -22,12 +22,15 @@ import paddle.fluid as fluid
 import reader
 from utility import print_arguments, parse_args, check_gpu
 import models.model_builder as model_builder
-import models.resnet_pp as resnet_pp
-#from models.resnet_pp import ResNetC5 as resnetc5
+import models.resnet as resnet
 from config import cfg
 from data_utils2 import DatasetPath
 import checkpoint as checkpoint
 #from train import *
+import logging
+FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+logger = logging.getLogger(__name__)
 
 
 def eval():
@@ -36,14 +39,9 @@ def eval():
     exe = fluid.Executor(place)
     image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
     class_nums = cfg.class_num
-#    model = model_builder.RCNN(
-#        add_conv_body_func=resnet.add_ResNet50_conv4_body,
-#        add_roi_box_head_func=resnet.add_ResNet_roi_conv5_head,
-#        use_pyreader=False,
-#        mode='infer')
     model = model_builder.RRPN(
-        add_conv_body_func=resnet_pp.ResNet(),
-        add_roi_box_head_func=resnet_pp.ResNetC5(),
+        add_conv_body_func=resnet.ResNet(),
+        add_roi_box_head_func=resnet.ResNetC5(),
         use_pyreader=False,
         mode='val')
 
@@ -78,8 +76,7 @@ def eval():
         res = get_dict(outs, data[0], keys)
         res_list.append(res)
         if i % 50 == 0:
-            print('test_iter {}'.format(i))
-
+            logger.info('test_iter {}'.format(i))
     icdar_eval(res_list)
 
 if __name__ == '__main__':
